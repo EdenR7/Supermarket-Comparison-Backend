@@ -13,6 +13,7 @@ class User
   public email!: string;
   public username!: string;
   public password!: string;
+  public isAdmin!: boolean;
   public createdAt!: Date;
   public updatedAt!: Date;
 
@@ -46,6 +47,11 @@ User.init(
     password: {
       type: DataTypes.STRING,
       allowNull: false,
+    },
+    isAdmin: {
+      type: DataTypes.BOOLEAN,
+      allowNull: false,
+      defaultValue: false,
     },
     createdAt: {
       type: DataTypes.DATE,
