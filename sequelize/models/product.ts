@@ -20,6 +20,31 @@ class Product
     Product.hasMany(models.ProductPrice, { foreignKey: "product_id" });
     Product.hasMany(models.CartItem, { foreignKey: "product_id" });
   }
+
+  // Static methods for common queries
+  
+  
+
+  // Get product by ID with details
+  public static async findByPkWithDetails(id: number) {
+    return this.findByPk(id, {
+      include: [
+        {
+          model: sequelize.models.Category,
+          attributes: ["id", "name"],
+        },
+        {
+          model: sequelize.models.ProductPrice,
+          include: [
+            {
+              model: sequelize.models.Supermarket,
+              attributes: ["id", "name", "brand_img"],
+            },
+          ],
+        },
+      ],
+    });
+  }
 }
 
 Product.init(

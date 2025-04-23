@@ -1,7 +1,6 @@
 import { Request, Response } from "express";
-import { Op } from "sequelize";
 import db from "../../sequelize/models";
-import { UserAttributes, UserWithoutPasswordI } from "src/types/user.types";
+import { UserWithoutPasswordI } from "src/types/user.types";
 const { User } = db;
 
 export async function createUser(req: Request, res: Response) {
@@ -16,12 +15,14 @@ export async function createUser(req: Request, res: Response) {
       email,
       username,
       password, // Note: In a real app, you should hash this password
+      isAppAdmin: false,
     });
 
     const userResponse: UserWithoutPasswordI = {
       id: newUser.id,
       email: newUser.email,
       username: newUser.username,
+      isAppAdmin: newUser.isAppAdmin,
       createdAt: newUser.createdAt,
       updatedAt: newUser.updatedAt,
     };

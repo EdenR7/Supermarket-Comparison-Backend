@@ -5,7 +5,7 @@ export interface UserAttributes {
   email: string;
   username: string;
   password: string;
-  isAdmin: boolean;
+  isAppAdmin: boolean;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -13,4 +13,4 @@ export interface UserAttributes {
 export interface UserWithoutPasswordI extends Omit<UserAttributes, "password"> {}
 
 export interface UserCreationAttributes
-  extends Optional<UserAttributes, "id" | "createdAt" | "updatedAt"> {}
+  extends Optional<UserAttributes, "id" | "createdAt" | "updatedAt" | "isAppAdmin"> {}

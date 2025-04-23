@@ -28,14 +28,14 @@ export function verifyToken(req: Request, res: Response, next: NextFunction) {
   }
 }
 
-export async function verifyAdmin(
+export async function verifyAppAdmin(
   req: Request,
   res: Response,
   next: NextFunction
 ) {
   const { userId } = req as AuthRequest;
   const user = await User.findByPk(userId);
-  if (user?.isAdmin) {
+  if (user?.isAppAdmin) {
     next();
   } else {
     return res.status(403).json({ error: "Forbidden" });
