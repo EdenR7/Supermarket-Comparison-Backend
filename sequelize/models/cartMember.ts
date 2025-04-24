@@ -4,6 +4,8 @@ import {
   CartMemberAttributes,
   CartMemberCreationAttributes,
 } from "../../src/types/cartMember.types";
+import Cart from "./cart";
+import { CustomError } from "../../src/utils/errors/CustomError";
 
 class CartMember
   extends Model<CartMemberAttributes, CartMemberCreationAttributes>
@@ -34,6 +36,13 @@ class CartMember
       { transaction }
     );
     return cartMember;
+  }
+  public static async removeMemberFromCart(
+    cart_id: number,
+    user_id: number,
+    transaction?: Transaction
+  ) {
+    await CartMember.destroy({ where: { cart_id, user_id }, transaction });
   }
 }
 

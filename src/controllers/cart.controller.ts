@@ -8,6 +8,7 @@ import CartItem from "../../sequelize/models/cartItem";
 import User from "../../sequelize/models/user";
 import CartMember from "../../sequelize/models/cartMember";
 import { CartAttributes } from "../types/cart.types";
+import { cartAdminAction } from "../utils/cart.utils";
 
 /**
 /**
@@ -21,13 +22,31 @@ export const getUserCarts = async (
 ) => {
   try {
     // The user ID should be available from the auth middleware
-    const userId = req.userId;
+    const { userId } = req;
     const { page = 1, size = 5 } = req.query;
     const { limit, offset } = getPagination(Number(page), Number(size));
 
-    // Find all carts for this user
+    // Find all carts where the user is a member
     const carts = await Cart.findAll({
-      where: { user_id: userId },
+      include: [
+        // First include to get all cart members
+        {
+          model: CartMember,
+          include: [
+            {
+              model: User,
+              attributes: ["id", "username", "email"],
+            },
+          ],
+        },
+        {
+          model: CartMember,
+          where: { user_id: userId },
+          required: true, // Makes it an INNER JOIN
+          attributes: [],
+        },
+      ],
+
       order: [["createdAt", "DESC"]],
       limit,
       offset,
@@ -131,6 +150,10 @@ export const deleteCart = async (
     const cart = await Cart.findByPk(id);
     if (!cart) throw new CustomError("Cart not found", 404);
 
+    // only the creator can delete the cart
+    if (cart.user_id !== userId)
+      throw new CustomError("You are not authorized to delete this cart", 403);
+
     await cart.destroy();
     res.status(200).json({ message: "Cart deleted successfully" });
   } catch (error) {
@@ -157,11 +180,45 @@ export const addCartMember = async (
     const newMember = await User.findByPk(newMemberId);
     if (!newMember) throw new CustomError("Member not found", 404);
 
-    await CartMember.addMemberToCart(cart.id, newMemberId, false);
+    await cartAdminAction(cart.id, userId, async () => {
+      await CartMember.addMemberToCart(cart.id, newMemberId, false);
+    });
 
     res.status(200).json({ message: "Member added to cart successfully" });
   } catch (error) {
     console.log("Error adding cart member", error);
+    next(error);
+  }
+};
+
+export const removeCartMember = async (
+  req: AuthRequest,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const { id } = req.params;
+    const { userId } = req;
+    if (!userId) throw new CustomError("User not authenticated", 401);
+
+    const { userIdToRemove } = req.body;
+    if (!userIdToRemove)
+      throw new CustomError("userIdToRemove is required", 400);
+
+    const cart = await Cart.findByPk(id);
+    if (!cart) throw new CustomError("Cart not found", 404);
+
+    const member = await CartMember.findOne({
+      where: { cart_id: cart.id, user_id: userIdToRemove },
+    });
+    if (!member) throw new CustomError("Member not found", 404);
+
+    await cartAdminAction(cart.id, userId, async () => {
+      await CartMember.removeMemberFromCart(cart.id, userIdToRemove);
+    });
+
+    res.status(200).json({ message: "Member removed from cart successfully" });
+  } catch (error) {
     next(error);
   }
 };
