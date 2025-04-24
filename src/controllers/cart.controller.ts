@@ -1,12 +1,13 @@
-import { Request, Response, NextFunction } from "express";
-import Cart from "../../sequelize/models/cart";
+import { Response, NextFunction } from "express";
 import { CustomError } from "../utils/errors/CustomError";
 import { AuthRequest } from "../types/auth.types";
 import { getPagination } from "../utils/pagination";
 import sequelize from "../config/database";
+import Cart from "../../sequelize/models/cart";
 import CartItem from "../../sequelize/models/cartItem";
-import { CreateCartItemProductsI } from "src/types/cartItem.types";
-import { CartAttributes } from "src/types/cart.types";
+import User from "../../sequelize/models/user";
+import CartMember from "../../sequelize/models/cartMember";
+import { CartAttributes } from "../types/cart.types";
 
 /**
 /**
@@ -61,6 +62,7 @@ export const createEmptyCart = async (
   res: Response,
   next: NextFunction
 ) => {
+  // Remember to adjust the response format
   try {
     const { userId } = req;
     if (!userId) throw new CustomError("User not authenticated", 401);
@@ -68,7 +70,12 @@ export const createEmptyCart = async (
     const { title } = req.body;
     if (!title) throw new CustomError("Title is required", 400);
 
-    const cart = await Cart.createEmptyCart(title, userId);
+    let cart: CartAttributes | null = null;
+    await sequelize.transaction(async (transaction) => {
+      cart = await Cart.createEmptyCart(title, userId, transaction);
+      await CartMember.addMemberToCart(cart.id, userId, true, transaction);
+    });
+    if (!cart) throw new CustomError("Cart creation failed", 500);
 
     res.status(201).json(cart);
   } catch (error) {
@@ -99,6 +106,7 @@ export const createCartWithProducts = async (
         products,
         transaction
       );
+      await CartMember.addMemberToCart(newCartId, userId, true, transaction);
     });
 
     if (!newCartId) throw new CustomError("Cart creation failed", 500);
@@ -106,6 +114,54 @@ export const createCartWithProducts = async (
 
     res.status(201).json(cartDetails);
   } catch (error) {
+    next(error);
+  }
+};
+
+export const deleteCart = async (
+  req: AuthRequest,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const { id } = req.params;
+    const { userId } = req;
+    if (!userId) throw new CustomError("User not authenticated", 401);
+
+    const cart = await Cart.findByPk(id);
+    if (!cart) throw new CustomError("Cart not found", 404);
+
+    await cart.destroy();
+    res.status(200).json({ message: "Cart deleted successfully" });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const addCartMember = async (
+  req: AuthRequest,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const { id } = req.params;
+    const { userId } = req;
+    if (!userId) throw new CustomError("User not authenticated", 401);
+
+    const { newMemberId } = req.body;
+    if (!newMemberId) throw new CustomError("Member ID is required", 400);
+
+    const cart = await Cart.findByPk(id);
+    if (!cart) throw new CustomError("Cart not found", 404);
+
+    const newMember = await User.findByPk(newMemberId);
+    if (!newMember) throw new CustomError("Member not found", 404);
+
+    await CartMember.addMemberToCart(cart.id, newMemberId, false);
+
+    res.status(200).json({ message: "Member added to cart successfully" });
+  } catch (error) {
+    console.log("Error adding cart member", error);
     next(error);
   }
 };

@@ -59,6 +59,7 @@ class CartItem
 
       return cartItems;
     } catch (error) {
+      console.log("error in generateCartItemsFromProducts", error);
       throw new CustomError("Failed to generate cart items", 500);
     }
   }

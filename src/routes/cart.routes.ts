@@ -4,6 +4,8 @@ import {
   createEmptyCart,
   getCartById,
   getUserCarts,
+  deleteCart,
+  addCartMember
 } from "../controllers/cart.controller";
 
 const router = Router();
@@ -19,5 +21,12 @@ router.post("/", createEmptyCart);
 
 // Create a cart with products
 router.post("/with-products", createCartWithProducts);
+
+// Add a product to a cart
+router.post("/cart-members/:id", addCartMember);
+
+// Delete a cart
+router.delete("/:id", deleteCart);
+
 
 export default router;

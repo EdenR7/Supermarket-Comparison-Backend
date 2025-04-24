@@ -1,9 +1,9 @@
-import { Model, DataTypes } from "sequelize";
+import { Model, DataTypes, Transaction } from "sequelize";
 import sequelize from "../../src/config/database";
 import {
   CartMemberAttributes,
   CartMemberCreationAttributes,
-} from "src/types/cartMember.types";
+} from "../../src/types/cartMember.types";
 
 class CartMember
   extends Model<CartMemberAttributes, CartMemberCreationAttributes>
@@ -16,7 +16,24 @@ class CartMember
 
   // Associations
   public static associate(models: any) {
-    // This is a join table, associations are defined in User and Cart models
+    CartMember.belongsTo(models.User, { foreignKey: "user_id" });
+    CartMember.belongsTo(models.Cart, { foreignKey: "cart_id" });
+  }
+  public static async addMemberToCart(
+    cart_id: number,
+    user_id: number,
+    is_admin?: boolean,
+    transaction?: Transaction
+  ) {
+    const cartMember = await CartMember.create(
+      {
+        cart_id,
+        user_id,
+        is_admin: is_admin || false,
+      },
+      { transaction }
+    );
+    return cartMember;
   }
 }
 

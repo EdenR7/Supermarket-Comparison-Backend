@@ -5,6 +5,7 @@ import { CustomError } from "../../src/utils/errors/CustomError";
 import User from "./user";
 import CartItem from "./cartItem";
 import Product from "./product";
+import CartMember from "./cartMember";
 
 class Cart
   extends Model<CartAttributes, CartCreationAttributes>
@@ -18,11 +19,20 @@ class Cart
 
   // Associations
   public static associate(models: any) {
-    Cart.belongsTo(models.User, { foreignKey: "user_id" });
-    Cart.hasMany(models.CartItem, { foreignKey: "cart_id" });
+    Cart.belongsTo(models.User, { foreignKey: "user_id", as: "creator" });
+    Cart.hasMany(models.CartItem, {
+      foreignKey: "cart_id",
+      onDelete: "CASCADE",
+    });
+    Cart.hasMany(models.CartMember, {
+      foreignKey: "cart_id",
+      onDelete: "CASCADE",
+    });
     Cart.belongsToMany(models.User, {
       through: models.CartMember,
       foreignKey: "cart_id",
+      otherKey: "user_id",
+      as: "members",
     });
   }
 
@@ -51,14 +61,31 @@ class Cart
         include: [
           { model: CartItem, include: [{ model: Product }] },
           {
-            model: User,
-            attributes: ["id", "username", "email"],
+            model: CartMember,
+            include: [
+              {
+                model: User,
+                attributes: ["id", "username", "email"],
+              },
+            ],
           },
         ],
       });
-      const adjustedCart = {
-        id : cart?.id
-      }
+      if (!cart) throw new CustomError("Cart not found", 404);
+
+      // const adjustedCart = {
+      //   id: cart?.id,
+      //   title: cart?.title,
+      //   user_id: cart?.user_id,
+      //   createdAt: cart?.createdAt,
+      //   updatedAt: cart?.updatedAt,
+      //   members: cart.CartMembers.map((member) => ({
+      //     id: member.id,
+      //     user_id: member.user_id,
+      //     is_admin: member.is_admin,
+      //   })),
+      // };
+
       return cart;
     } catch (error) {
       throw new CustomError("Failed to get cart details", 500);
