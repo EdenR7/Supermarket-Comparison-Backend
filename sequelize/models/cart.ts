@@ -1,6 +1,10 @@
-import { Model, DataTypes } from "sequelize";
+import { Model, DataTypes, Transaction } from "sequelize";
 import { CartAttributes, CartCreationAttributes } from "src/types/cart.types";
 import sequelize from "../../src/config/database";
+import { CustomError } from "../../src/utils/errors/CustomError";
+import User from "./user";
+import CartItem from "./cartItem";
+import Product from "./product";
 
 class Cart
   extends Model<CartAttributes, CartCreationAttributes>
@@ -20,6 +24,45 @@ class Cart
       through: models.CartMember,
       foreignKey: "cart_id",
     });
+  }
+
+  public static async createEmptyCart(
+    title: string,
+    user_id: number,
+    transaction?: Transaction
+  ): Promise<CartAttributes> {
+    try {
+      const cart = await Cart.create(
+        {
+          title,
+          user_id: user_id,
+        },
+        { transaction }
+      );
+      return cart;
+    } catch (error) {
+      throw new CustomError("Failed to create cart", 500);
+    }
+  }
+
+  public static async getFullyCartDetails(cart_id: number) {
+    try {
+      const cart = await Cart.findByPk(cart_id, {
+        include: [
+          { model: CartItem, include: [{ model: Product }] },
+          {
+            model: User,
+            attributes: ["id", "username", "email"],
+          },
+        ],
+      });
+      const adjustedCart = {
+        id : cart?.id
+      }
+      return cart;
+    } catch (error) {
+      throw new CustomError("Failed to get cart details", 500);
+    }
   }
 }
 

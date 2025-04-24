@@ -12,8 +12,8 @@ interface ProductCriteria {
 }
 
 export function buildProductQuery(query: ProductCriteria) {
-  const { name, category, page = 0, size = 3 } = query;
-  const { limit, offset } = getPagination(page, size);
+  const { name, category, page = 1, size = 3 } = query;
+  const { limit, offset } = getPagination(Number(page), Number(size));
 
   // Build the main product criteria
   const criteria: any = {};

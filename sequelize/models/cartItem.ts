@@ -1,9 +1,11 @@
-import { Model, DataTypes } from "sequelize";
+import { Model, DataTypes, Transaction } from "sequelize";
 import sequelize from "../../src/config/database";
 import {
   CartItemAttributes,
   CartItemCreationAttributes,
+  CreateCartItemProductsI,
 } from "src/types/cartItem.types";
+import { CustomError } from "../../src/utils/errors/CustomError";
 
 class CartItem
   extends Model<CartItemAttributes, CartItemCreationAttributes>
@@ -18,6 +20,47 @@ class CartItem
   public static associate(models: any) {
     CartItem.belongsTo(models.Cart, { foreignKey: "cart_id" });
     CartItem.belongsTo(models.Product, { foreignKey: "product_id" });
+  }
+
+  public static async createCartItem(
+    cart_id: number,
+    product_id: number,
+    quantity: number
+  ) {
+    try {
+      const cartItem = await CartItem.create({ cart_id, product_id, quantity });
+      return cartItem;
+    } catch (error) {
+      throw new CustomError("Failed to create cart item", 500);
+    }
+  }
+
+  public static async generateCartItemsFromProducts(
+    cart_id: number,
+    products: CreateCartItemProductsI[],
+    transaction?: Transaction
+  ) {
+    try {
+      const cartItems = await Promise.all(
+        products.map((product) => {
+          const { product_id, quantity } = product;
+          if (!product_id || !quantity || quantity <= 0) {
+            return Promise.reject(
+              new CustomError("Invalid product or quantity", 400)
+            );
+          }
+
+          return CartItem.create(
+            { cart_id, product_id, quantity },
+            { transaction }
+          );
+        })
+      );
+
+      return cartItems;
+    } catch (error) {
+      throw new CustomError("Failed to generate cart items", 500);
+    }
   }
 }
 
