@@ -29,6 +29,27 @@ export const getAllProducts = async (
   }
 };
 
+export const countProducts = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const queryOptions = buildProductQuery(req.query);
+    const { where, include, distinct } = queryOptions;
+
+    const count = await Product.count({
+      where,
+      include,
+      distinct,
+    });
+    res.status(200).json(count);
+  } catch (error) {
+    console.log("Error in countProducts", error);
+    next(error);
+  }
+};
+
 /**
  * Get product by ID
  * @route GET /api/products/:id

@@ -54,7 +54,43 @@ export const getUserCarts = async (
 
     res.status(200).json(carts);
   } catch (error) {
-    console.error("Error fetching user carts:", error);
+    console.log("Error in getUserCarts", error);
+    next(error);
+  }
+};
+
+export const countUserCarts = async (
+  req: AuthRequest,
+  res: Response,
+  next: NextFunction
+) => {
+  const { userId } = req;
+
+  const count = await Cart.count({
+    include: [
+      // First include to get all cart members
+      {
+        model: CartMember,
+        include: [
+          {
+            model: User,
+            attributes: ["id", "username", "email"],
+          },
+        ],
+      },
+      {
+        model: CartMember,
+        where: { user_id: userId },
+        required: true, // Makes it an INNER JOIN
+        attributes: [],
+      },
+    ],
+  });
+
+  res.status(200).json(count);
+  try {
+  } catch (error) {
+    console.log("Error in countUserCarts", error);
     next(error);
   }
 };
@@ -72,6 +108,7 @@ export const getCartById = async (
     const cart = await Cart.getFullyCartDetails(Number(id));
     res.status(200).json(cart);
   } catch (error) {
+    console.log("Error in getCartById", error);
     next(error);
   }
 };
@@ -98,6 +135,7 @@ export const createEmptyCart = async (
 
     res.status(201).json(cart);
   } catch (error) {
+    console.log("Error in createEmptyCart", error);
     next(error);
   }
 };
@@ -133,6 +171,7 @@ export const createCartWithProducts = async (
 
     res.status(201).json(cartDetails);
   } catch (error) {
+    console.log("Error in createCartWithProducts", error);
     next(error);
   }
 };
@@ -157,6 +196,7 @@ export const deleteCart = async (
     await cart.destroy();
     res.status(200).json({ message: "Cart deleted successfully" });
   } catch (error) {
+    console.log("Error in deleteCart", error);
     next(error);
   }
 };
@@ -186,7 +226,7 @@ export const addCartMember = async (
 
     res.status(200).json({ message: "Member added to cart successfully" });
   } catch (error) {
-    console.log("Error adding cart member", error);
+    console.log("Error in addCartMember", error);
     next(error);
   }
 };
@@ -219,6 +259,7 @@ export const removeCartMember = async (
 
     res.status(200).json({ message: "Member removed from cart successfully" });
   } catch (error) {
+    console.log("Error in removeCartMember", error);
     next(error);
   }
 };

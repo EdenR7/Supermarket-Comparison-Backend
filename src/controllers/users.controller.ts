@@ -1,47 +1,41 @@
-import { Request, Response } from "express";
+import { NextFunction, Request, Response } from "express";
 import db from "../../sequelize/models";
 import { UserWithoutPasswordI } from "src/types/user.types";
+import { buildUserQuery } from "../helpers/user.helpers";
 const { User } = db;
 
-export async function createUser(req: Request, res: Response) {
+export async function countUsers(
+  req: Request,
+  res: Response,
+  next: NextFunction
+) {
   try {
-    const { email, username, password } = req.body;
-
-    if (!email || !username || !password) {
-      return res.status(400).json({ message: "All fields are required" });
-    }
-
-    const newUser = await User.create({
-      email,
-      username,
-      password, // Note: In a real app, you should hash this password
-      isAppAdmin: false,
-    });
-
-    const userResponse: UserWithoutPasswordI = {
-      id: newUser.id,
-      email: newUser.email,
-      username: newUser.username,
-      isAppAdmin: newUser.isAppAdmin,
-      createdAt: newUser.createdAt,
-      updatedAt: newUser.updatedAt,
-    };
-
-    return res.status(201).json(userResponse);
+    const { whereClause } = buildUserQuery(req.query);
+    const count = await User.count({ where: whereClause });
+    res.status(200).json(count);
   } catch (error) {
-    console.error("Error creating user:", error);
-    return res.status(500).json({ message: "Internal server error" });
+    console.error("Error counting users:", error);
+    next(error);
   }
 }
 
-export async function getUsers(req: Request, res: Response) {
+export async function getUsers(
+  req: Request,
+  res: Response,
+  next: NextFunction
+) {
   try {
+    const { limit, offset, whereClause } = buildUserQuery(req.query);
+
     const users: UserWithoutPasswordI[] = await User.findAll({
       attributes: { exclude: ["password"] },
+      limit,
+      offset,
+      where: whereClause,
     });
-    return res.status(200).json(users);
+    res.status(200).json(users);
   } catch (error) {
     console.error("Error fetching users:", error);
-    return res.status(500).json({ message: "Internal server error" });
+    next(error);
   }
 }

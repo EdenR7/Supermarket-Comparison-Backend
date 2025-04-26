@@ -7,12 +7,16 @@ import {
   deleteCart,
   addCartMember,
   removeCartMember,
+  countUserCarts,
 } from "../controllers/cart.controller";
 
 const router = Router();
 
 // Get all carts for the authenticated user
 router.get("/", getUserCarts);
+
+// Get the count of carts for the authenticated user
+router.get("/count", countUserCarts);
 
 // Get a cart by ID
 router.get("/:id", getCartById);
