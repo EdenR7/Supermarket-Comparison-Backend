@@ -1,10 +1,14 @@
 import { NextFunction, Request, Response } from "express";
-import Product from "../../sequelize/models/product";
-import Category from "../../sequelize/models/category";
-import ProductPrice from "../../sequelize/models/productPrice";
-import Supermarket from "../../sequelize/models/supermarket";
+import Product from "../db/models/product";
+import Category from "../db/models/category";
+import ProductPrice from "../db/models/productPrice";
+import Supermarket from "../db/models/supermarket";
 import { CustomError } from "../utils/errors/CustomError";
-import { buildProductQuery } from "../helpers/product.helpers";
+import {
+  buildProductQuery,
+  transformProductToFullDetails,
+} from "../helpers/product.helpers";
+import { JoinedProductDetails } from "src/types/product.types";
 
 /**
  * Get all products
@@ -19,10 +23,14 @@ export const getAllProducts = async (
     // Get query options from helper
     const queryOptions = buildProductQuery(req.query);
 
-    // Use the options directly in findAll
     const products = await Product.findAll(queryOptions);
+    const response = products.map((p) =>
+      transformProductToFullDetails(
+        p.toJSON() as unknown as JoinedProductDetails
+      )
+    );
 
-    res.status(200).json(products);
+    res.status(200).json(response);
   } catch (error) {
     console.error("Error fetching products:", error);
     next(error);
@@ -84,7 +92,11 @@ export const getProductById = async (
       throw new CustomError("Product not found", 404);
     }
 
-    res.status(200).json(product);
+    const response = transformProductToFullDetails(
+      product.toJSON() as unknown as JoinedProductDetails
+    );
+
+    res.status(200).json(response);
   } catch (error) {
     console.error("Error fetching product:", error);
     next(error);

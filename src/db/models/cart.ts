@@ -1,7 +1,7 @@
 import { Model, DataTypes, Transaction } from "sequelize";
 import { CartAttributes, CartCreationAttributes } from "src/types/cart.types";
-import sequelize from "../../src/config/database";
-import { CustomError } from "../../src/utils/errors/CustomError";
+import sequelize from "../../config/database";
+import { CustomError } from "../../utils/errors/CustomError";
 import User from "./user";
 import CartItem from "./cartItem";
 import Product from "./product";
@@ -89,6 +89,43 @@ class Cart
       return cart;
     } catch (error) {
       throw new CustomError("Failed to get cart details", 500);
+    }
+  }
+
+  public static async getUserCarts(
+    userId: number,
+    limit?: number,
+    offset?: number
+  ) {
+    try {
+      const carts = await Cart.findAll({
+        include: [
+          // First include to get all cart members
+          {
+            model: CartMember,
+            include: [
+              {
+                model: User,
+                attributes: ["id", "username", "email"],
+              },
+            ],
+          },
+          {
+            model: CartMember,
+            where: { user_id: userId },
+            required: true, // Makes it an INNER JOIN
+            attributes: [],
+          },
+        ],
+
+        order: [["createdAt", "DESC"]],
+        limit,
+        offset,
+      });
+      return carts;
+    } catch (error) {
+      console.log("error in getUserCarts", error);
+      throw error;
     }
   }
 }

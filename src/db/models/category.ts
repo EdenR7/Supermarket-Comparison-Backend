@@ -1,9 +1,9 @@
 import { Model, DataTypes } from "sequelize";
-import sequelize from "../../src/config/database";
+import sequelize from "../../config/database";
 import {
   CategoryAttributes,
   CategoryCreationAttributes,
-} from "../../src/types/category.types";
+} from "src/types/category.types";
 
 class Category
   extends Model<CategoryAttributes, CategoryCreationAttributes>

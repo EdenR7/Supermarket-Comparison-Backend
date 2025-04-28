@@ -2,7 +2,7 @@ import { Request, Response, NextFunction } from "express";
 import jwt, { JwtPayload } from "jsonwebtoken";
 import { getErrorData } from "../utils/errors/ErrorsFunctions";
 import { AuthRequest } from "../types/auth.types";
-import User from "../../sequelize/models/user";
+import User from "../db/models/user";
 
 const JWT_SECRET = process.env.JWT_SECRET as string;
 

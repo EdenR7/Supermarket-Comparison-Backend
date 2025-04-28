@@ -1,8 +1,12 @@
 import { Op } from "sequelize";
-import Category from "../../sequelize/models/category";
-import ProductPrice from "../../sequelize/models/productPrice";
-import Supermarket from "../../sequelize/models/supermarket";
+import Category from "../db/models/category";
+import ProductPrice from "../db/models/productPrice";
+import Supermarket from "../db/models/supermarket";
 import { getPagination } from "../utils/pagination";
+import {
+  FullProductDetails,
+  JoinedProductDetails,
+} from "src/types/product.types";
 
 interface ProductCriteria {
   name?: string;
@@ -52,5 +56,23 @@ export function buildProductQuery(query: ProductCriteria) {
     offset,
     distinct: true,
     order: [["id", "ASC"] as any],
+  };
+}
+
+export function transformProductToFullDetails(
+  product: JoinedProductDetails
+): FullProductDetails {
+  console.log(product);
+  return {
+    id: product.id,
+    name: product.name,
+    img_url: product.img_url,
+    category: product.Category?.name || "",
+    prices: product.ProductPrices.map((pp) => ({
+      id: pp.id,
+      price: pp.price,
+      last_updated: pp.last_updated,
+      supermarket: pp.Supermarket.name,
+    })),
   };
 }

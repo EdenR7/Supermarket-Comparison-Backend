@@ -1,4 +1,5 @@
 import { Optional } from "sequelize";
+import { SupermarketAttributes } from "./supermarket.types";
 
 export interface ProductPriceAttributes {
   id: number;
@@ -10,3 +11,10 @@ export interface ProductPriceAttributes {
 
 export interface ProductPriceCreationAttributes
   extends Optional<ProductPriceAttributes, "id"> {}
+
+export interface ProductPriceI {
+  id: number;
+  price: number;
+  last_updated: Date;
+  supermarket: string;
+}

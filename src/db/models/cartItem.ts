@@ -1,11 +1,11 @@
 import { Model, DataTypes, Transaction } from "sequelize";
-import sequelize from "../../src/config/database";
+import sequelize from "../../config/database";
 import {
   CartItemAttributes,
   CartItemCreationAttributes,
   CreateCartItemProductsI,
 } from "src/types/cartItem.types";
-import { CustomError } from "../../src/utils/errors/CustomError";
+import { CustomError } from "../../utils/errors/CustomError";
 
 class CartItem
   extends Model<CartItemAttributes, CartItemCreationAttributes>

@@ -2,8 +2,8 @@ import { Model, DataTypes } from "sequelize";
 import {
   SupermarketAttributes,
   SupermarketCreationAttributes,
-} from "../../src/types/supermarket.types";
-import sequelize from "../../src/config/database";
+} from "src/types/supermarket.types";
+import sequelize from "../../config/database";
 
 class Supermarket
   extends Model<SupermarketAttributes, SupermarketCreationAttributes>

@@ -10,3 +10,5 @@ export interface CartAttributes {
 
 export interface CartCreationAttributes
   extends Optional<CartAttributes, "id" | "createdAt" | "updatedAt"> {}
+
+

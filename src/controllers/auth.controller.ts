@@ -1,7 +1,7 @@
 import { NextFunction, Request, Response } from "express";
 import bcrypt from "bcrypt";
 import { buildAuthResponse, generateToken } from "../utils/authFunctions";
-import db from "../../sequelize/models";
+import db from "../db/models";
 const { User } = db;
 import { CustomError } from "../utils/errors/CustomError";
 // async function changePwd(req, res, next) {
@@ -30,12 +30,12 @@ import { CustomError } from "../utils/errors/CustomError";
 
 export async function login(req: Request, res: Response, next: NextFunction) {
   try {
-    const { username, password } = req.body;
-    if (!username || !password) {
-      throw new CustomError("Username and password are required", 401);
+    const { email, password } = req.body;
+    if (!email || !password) {
+      throw new CustomError("email and password are required", 401);
     }
     const user = await User.findOne({
-      where: { username },
+      where: { email },
     });
     if (!user) throw new CustomError("User not found", 404);
 

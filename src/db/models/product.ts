@@ -1,9 +1,9 @@
 import { Model, DataTypes } from "sequelize";
-import sequelize from "../../src/config/database";
+import sequelize from "../../config/database";
 import {
   ProductAttributes,
   ProductCreationAttributes,
-} from "../../src/types/product.types";
+} from "src/types/product.types";
 
 class Product
   extends Model<ProductAttributes, ProductCreationAttributes>
@@ -22,8 +22,6 @@ class Product
   }
 
   // Static methods for common queries
-  
-  
 
   // Get product by ID with details
   public static async findByPkWithDetails(id: number) {

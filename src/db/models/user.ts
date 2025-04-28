@@ -1,9 +1,6 @@
 import { DataTypes, Model } from "sequelize";
-import {
-  UserAttributes,
-  UserCreationAttributes,
-} from "../../src/types/user.types";
-import sequelize from "../../src/config/database";
+import sequelize from "../../config/database";
+import { UserAttributes, UserCreationAttributes } from "src/types/user.types";
 
 class User
   extends Model<UserAttributes, UserCreationAttributes>

@@ -2,13 +2,15 @@ import { Response, NextFunction } from "express";
 import { CustomError } from "../utils/errors/CustomError";
 import { AuthRequest } from "../types/auth.types";
 import { getPagination } from "../utils/pagination";
+import db from "../db/models";
 import sequelize from "../config/database";
-import Cart from "../../sequelize/models/cart";
-import CartItem from "../../sequelize/models/cartItem";
-import User from "../../sequelize/models/user";
-import CartMember from "../../sequelize/models/cartMember";
+// import Cart from "../db/models/cart";
+// import CartItem from "../db/models/cartItem";
+// import User from "../db/models/user";
+// import CartMember from "../db/models/cartMember";
 import { CartAttributes } from "../types/cart.types";
 import { cartAdminAction } from "../utils/cart.utils";
+const { Cart, CartMember, User, CartItem } = db;
 
 /**
 /**
@@ -27,30 +29,7 @@ export const getUserCarts = async (
     const { limit, offset } = getPagination(Number(page), Number(size));
 
     // Find all carts where the user is a member
-    const carts = await Cart.findAll({
-      include: [
-        // First include to get all cart members
-        {
-          model: CartMember,
-          include: [
-            {
-              model: User,
-              attributes: ["id", "username", "email"],
-            },
-          ],
-        },
-        {
-          model: CartMember,
-          where: { user_id: userId },
-          required: true, // Makes it an INNER JOIN
-          attributes: [],
-        },
-      ],
-
-      order: [["createdAt", "DESC"]],
-      limit,
-      offset,
-    });
+    const carts = await Cart.getUserCarts(userId!, limit, offset);
 
     res.status(200).json(carts);
   } catch (error) {

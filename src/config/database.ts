@@ -1,6 +1,6 @@
 import { Sequelize } from "sequelize";
 import dotenv from "dotenv";
-import dbConfig from "../../sequelize/config/config-for-ts";
+import dbConfig from "../db/config/config-for-ts";
 
 dotenv.config();
 const env = process.env.NODE_ENV || "development";

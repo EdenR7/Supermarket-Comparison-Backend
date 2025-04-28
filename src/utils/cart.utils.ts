@@ -1,4 +1,4 @@
-import CartMember from "../../sequelize/models/cartMember";
+import CartMember from "../db/models/cartMember";
 import { CustomError } from "./errors/CustomError";
 
 export async function cartAdminAction(
