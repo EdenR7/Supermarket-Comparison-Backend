@@ -4,10 +4,6 @@ import { AuthRequest } from "../types/auth.types";
 import { getPagination } from "../utils/pagination";
 import db from "../db/models";
 import sequelize from "../config/database";
-// import Cart from "../db/models/cart";
-// import CartItem from "../db/models/cartItem";
-// import User from "../db/models/user";
-// import CartMember from "../db/models/cartMember";
 import { CartAttributes } from "../types/cart.types";
 import { cartAdminAction } from "../utils/cart.utils";
 const { Cart, CartMember, User, CartItem } = db;
@@ -107,7 +103,12 @@ export const createEmptyCart = async (
 
     let cart: CartAttributes | null = null;
     await sequelize.transaction(async (transaction) => {
-      cart = await Cart.createEmptyCart(title, userId, transaction);
+      const cart = await Cart.createEmptyCart(
+        title,
+        userId,
+        "saved",
+        transaction
+      );
       await CartMember.addMemberToCart(cart.id, userId, true, transaction);
     });
     if (!cart) throw new CustomError("Cart creation failed", 500);
@@ -135,7 +136,12 @@ export const createCartWithProducts = async (
     let newCartId: number | null = null;
 
     await sequelize.transaction(async (transaction) => {
-      const newCart = await Cart.createEmptyCart(title, userId, transaction);
+      const newCart = await Cart.createEmptyCart(
+        title,
+        userId,
+        "saved",
+        transaction
+      );
       newCartId = newCart.id;
       const cartItems = await CartItem.generateCartItemsFromProducts(
         newCartId,

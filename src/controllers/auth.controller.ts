@@ -2,8 +2,9 @@ import { NextFunction, Request, Response } from "express";
 import bcrypt from "bcrypt";
 import { buildAuthResponse, generateToken } from "../utils/authFunctions";
 import db from "../db/models";
-const { User } = db;
+const { User, Cart } = db;
 import { CustomError } from "../utils/errors/CustomError";
+import sequelize from "../config/database";
 // async function changePwd(req, res, next) {
 //   const { email, newPassword } = req.body;
 //   try {
@@ -64,14 +65,29 @@ export async function register(
       throw new CustomError("Email, username, and password are required", 404);
     }
     const hashedPassword = await bcrypt.hash(password, 10);
-    const user = await User.create({
-      email,
-      password: hashedPassword,
-      username,
-    });
 
-    const token = generateToken(user.id);
-    const response = buildAuthResponse(user.dataValues, token);
+    let response: any;
+
+    await sequelize.transaction(async (transaction) => {
+      const user = await User.create(
+        {
+          email,
+          password: hashedPassword,
+          username,
+        },
+        { transaction }
+      );
+      // const cart = await Cart.createEmptyCart("My Cart", user.id, "main", transaction);
+      const cart = await Cart.create(
+        {
+          user_id: user.id,
+          type: "main",
+        },
+        { transaction }
+      );
+      const token = generateToken(user.id);
+      response = buildAuthResponse(user.dataValues, token);
+    });
 
     res.status(201).json(response);
   } catch (error) {

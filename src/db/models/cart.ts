@@ -1,5 +1,9 @@
 import { Model, DataTypes, Transaction } from "sequelize";
-import { CartAttributes, CartCreationAttributes } from "src/types/cart.types";
+import {
+  CartAttributes,
+  CartCreationAttributes,
+  CartType,
+} from "src/types/cart.types";
 import sequelize from "../../config/database";
 import { CustomError } from "../../utils/errors/CustomError";
 import User from "./user";
@@ -16,6 +20,7 @@ class Cart
   public user_id!: number;
   public createdAt!: Date;
   public updatedAt!: Date;
+  public type!: CartType;
 
   // Associations
   public static associate(models: any) {
@@ -39,13 +44,17 @@ class Cart
   public static async createEmptyCart(
     title: string,
     user_id: number,
+    type: CartType,
     transaction?: Transaction
   ): Promise<CartAttributes> {
     try {
+      if (type === "saved" && !title)
+        throw new CustomError("Saved carts must have a title", 400);
       const cart = await Cart.create(
         {
           title,
-          user_id: user_id,
+          user_id,
+          type,
         },
         { transaction }
       );
@@ -139,7 +148,7 @@ Cart.init(
     },
     title: {
       type: DataTypes.STRING,
-      allowNull: false,
+      allowNull: true,
     },
     user_id: {
       type: DataTypes.INTEGER,
@@ -156,6 +165,11 @@ Cart.init(
     updatedAt: {
       type: DataTypes.DATE,
       allowNull: false,
+    },
+    type: {
+      type: DataTypes.ENUM("saved", "main", "active"),
+      allowNull: false,
+      defaultValue: "saved",
     },
   },
   {
