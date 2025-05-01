@@ -4,7 +4,7 @@ import { UserWithoutPasswordI } from "src/types/user.types";
 import { buildUserQuery } from "../helpers/user.helpers";
 import { AuthRequest } from "../types/auth.types";
 import { CustomError } from "../utils/errors/CustomError";
-const { User } = db;
+const { User, Cart } = db;
 
 export async function countUsers(
   req: Request,
@@ -52,9 +52,17 @@ export async function getLoggedInUser(
     const user = await User.findByPk(userId, {
       attributes: { exclude: ["password"] },
     });
-    
     if (!user) throw new CustomError("User not found", 404);
-    res.status(200).json(user);
+    const userMainCart = await Cart.findOne({
+      where: { user_id: userId, type: "main" },
+    });
+    if (!userMainCart) throw new CustomError("Main cart not found", 404);
+
+    const loggedInUser = {
+      ...user.dataValues,
+      mainCart: { ...userMainCart.dataValues },
+    };
+    res.status(200).json(loggedInUser);
   } catch (error) {
     console.error("Error in getLoggedInUser:", error);
     next(error);

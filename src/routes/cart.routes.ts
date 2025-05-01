@@ -3,17 +3,18 @@ import {
   createCartWithProducts,
   createEmptyCart,
   getCartById,
-  getUserCarts,
+  getUserSavedCarts,
   deleteCart,
   addCartMember,
   removeCartMember,
   countUserCarts,
+  copySavedCartToMain,
 } from "../controllers/cart.controller";
 
 const router = Router();
 
 // Get all carts for the authenticated user
-router.get("/", getUserCarts);
+router.get("/saved", getUserSavedCarts);
 
 // Get the count of carts for the authenticated user
 router.get("/count", countUserCarts);
@@ -29,6 +30,9 @@ router.post("/with-products", createCartWithProducts);
 
 // Add a product to a cart
 router.post("/cart-members/:id", addCartMember);
+
+// Copy a saved cart content to the main cart
+router.put("/copy-to-main/:savedCartId", copySavedCartToMain);
 
 // Remove a member from a cart
 router.delete("/cart-members/:id", removeCartMember);

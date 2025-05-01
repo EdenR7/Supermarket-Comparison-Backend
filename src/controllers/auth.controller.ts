@@ -77,8 +77,7 @@ export async function register(
         },
         { transaction }
       );
-      // const cart = await Cart.createEmptyCart("My Cart", user.id, "main", transaction);
-      const cart = await Cart.create(
+      await Cart.create(
         {
           user_id: user.id,
           type: "main",

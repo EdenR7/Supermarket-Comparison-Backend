@@ -101,13 +101,14 @@ class Cart
     }
   }
 
-  public static async getUserCarts(
+  public static async getUserSavedCarts(
     userId: number,
     limit?: number,
     offset?: number
   ) {
     try {
       const carts = await Cart.findAll({
+        where: { user_id: userId, type: "saved" },
         include: [
           // First include to get all cart members
           {

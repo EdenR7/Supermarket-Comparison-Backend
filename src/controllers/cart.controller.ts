@@ -13,7 +13,7 @@ const { Cart, CartMember, User, CartItem } = db;
  * Get all carts for the authenticated user
  * @route GET /api/carts
  */
-export const getUserCarts = async (
+export const getUserSavedCarts = async (
   req: AuthRequest,
   res: Response,
   next: NextFunction
@@ -25,11 +25,11 @@ export const getUserCarts = async (
     const { limit, offset } = getPagination(Number(page), Number(size));
 
     // Find all carts where the user is a member
-    const carts = await Cart.getUserCarts(userId!, limit, offset);
+    const carts = await Cart.getUserSavedCarts(userId!, limit, offset);
 
     res.status(200).json(carts);
   } catch (error) {
-    console.log("Error in getUserCarts", error);
+    console.log("Error in getUserSavedCarts controller", error);
     next(error);
   }
 };
@@ -245,6 +245,47 @@ export const removeCartMember = async (
     res.status(200).json({ message: "Member removed from cart successfully" });
   } catch (error) {
     console.log("Error in removeCartMember", error);
+    next(error);
+  }
+};
+
+// Need to finish this
+export const copySavedCartToMain = async (
+  req: AuthRequest,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const { savedCartId } = req.params;
+    const { userId } = req;
+    if (!userId) throw new CustomError("User not authenticated", 401);
+
+    const savedCart = await Cart.findByPk(savedCartId);
+    if (!savedCart) throw new CustomError("Saved cart not found", 404);
+
+    const mainCart = await Cart.findOne({
+      where: { user_id: userId, type: "main" },
+    });
+    if (!mainCart) throw new CustomError("Main cart not found", 404);
+
+    const savedCartItems = await CartItem.findAll({
+      where: { cart_id: savedCartId },
+    });
+
+    if (!savedCartItems)
+      throw new CustomError("Saved cart items not found", 404);
+    if (savedCartItems.length === 0) {
+      res.status(200).json({ message: "Saved cart is empty" });
+    } else {
+      // await CartItem.create({
+      //   cart_id: mainCart.id,
+      //   product_id: savedCartItems[0].product_id,
+      //   quantity: savedCartItems[0].quantity,
+      // });
+      // res.status(200).json({ message: "Saved cart copied to main cart" });
+    }
+  } catch (error) {
+    console.log("Error in copySavedCartToMain", error);
     next(error);
   }
 };
