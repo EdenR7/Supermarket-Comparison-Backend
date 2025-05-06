@@ -9,6 +9,8 @@ import {
   removeCartMember,
   countUserCarts,
   copySavedCartToMain,
+  addCartItem,
+  getUserMainCart,
 } from "../controllers/cart.controller";
 
 const router = Router();
@@ -18,6 +20,9 @@ router.get("/saved", getUserSavedCarts);
 
 // Get the count of carts for the authenticated user
 router.get("/count", countUserCarts);
+
+// Get the main cart for the authenticated user
+router.get("/user-main", getUserMainCart);
 
 // Get a cart by ID
 router.get("/:id", getCartById);
@@ -29,6 +34,9 @@ router.post("/", createEmptyCart);
 router.post("/with-products", createCartWithProducts);
 
 // Add a product to a cart
+router.post("/cart-items/:id", addCartItem);
+
+// Add a member to a cart
 router.post("/cart-members/:id", addCartMember);
 
 // Copy a saved cart content to the main cart

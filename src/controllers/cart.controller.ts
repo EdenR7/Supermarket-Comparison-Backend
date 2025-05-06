@@ -6,7 +6,7 @@ import db from "../db/models";
 import sequelize from "../config/database";
 import { CartAttributes } from "../types/cart.types";
 import { cartAdminAction } from "../utils/cart.utils";
-const { Cart, CartMember, User, CartItem } = db;
+const { Cart, CartMember, User, CartItem, Product } = db;
 
 /**
 /**
@@ -30,6 +30,24 @@ export const getUserSavedCarts = async (
     res.status(200).json(carts);
   } catch (error) {
     console.log("Error in getUserSavedCarts controller", error);
+    next(error);
+  }
+};
+
+export const getUserMainCart = async (
+  req: AuthRequest,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const { userId } = req;
+    if (!userId) throw new CustomError("User not authenticated", 401);
+
+    const userMainCart = await Cart.getMainCart(userId);
+    if (!userMainCart) throw new CustomError("Main cart not found", 404);
+    res.status(200).json(userMainCart);
+  } catch (error) {
+    console.log("Error in getUserMainCart controller", error);
     next(error);
   }
 };
@@ -80,7 +98,7 @@ export const getCartById = async (
     const { userId } = req;
     if (!userId) throw new CustomError("User not authenticated", 401);
 
-    const cart = await Cart.getFullyCartDetails(Number(id));
+    const cart = await Cart.getCartWithItems(Number(id));
     res.status(200).json(cart);
   } catch (error) {
     console.log("Error in getCartById", error);
@@ -245,6 +263,49 @@ export const removeCartMember = async (
     res.status(200).json({ message: "Member removed from cart successfully" });
   } catch (error) {
     console.log("Error in removeCartMember", error);
+    next(error);
+  }
+};
+
+export const addCartItem = async (
+  req: AuthRequest,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const { id } = req.params;
+    const { userId } = req;
+    if (!userId) throw new CustomError("User not authenticated", 401);
+
+    const { productId, quantity = 1 } = req.body;
+    if (!productId) throw new CustomError("Product ID is required", 400);
+
+    const cart = await Cart.findByPk(id);
+    if (!cart) throw new CustomError("Cart not found", 404);
+
+    const product = await Product.findByPk(productId);
+    if (!product) throw new CustomError("Product not found", 404);
+
+    const cartItem = await CartItem.create({
+      cart_id: cart.id,
+      product_id: productId,
+      quantity,
+    });
+
+    const response = {
+      id: cartItem.id,
+      quantity: cartItem.quantity,
+      product: {
+        id: product.id,
+        name: product.name,
+        img_url: product.img_url,
+        category_id: product.category_id,
+      },
+    };
+
+    res.status(200).json(response);
+  } catch (error) {
+    console.log("Error in addCartItem", error);
     next(error);
   }
 };

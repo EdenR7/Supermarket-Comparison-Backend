@@ -18,8 +18,11 @@ class CartItem
 
   // Associations
   public static associate(models: any) {
-    CartItem.belongsTo(models.Cart, { foreignKey: "cart_id" });
-    CartItem.belongsTo(models.Product, { foreignKey: "product_id" });
+    CartItem.belongsTo(models.Cart, { foreignKey: "cart_id", as: "cart" });
+    CartItem.belongsTo(models.Product, {
+      foreignKey: "product_id",
+      as: "product",
+    });
   }
 
   public static async createCartItem(

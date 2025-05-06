@@ -22,7 +22,7 @@ export const errorHandler = (
     return;
   }
   if (errorName === "SequelizeUniqueConstraintError") {
-    res.status(401).json({ message: "This username or email already in use" });
+    res.status(401).json({ message: errorMessage });
     return;
   }
   res.status(statusCode).json({ message: errorMessage });

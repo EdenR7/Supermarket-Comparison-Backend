@@ -27,10 +27,12 @@ class Cart
     Cart.belongsTo(models.User, { foreignKey: "user_id", as: "creator" });
     Cart.hasMany(models.CartItem, {
       foreignKey: "cart_id",
+      as: "cartItems",
       onDelete: "CASCADE",
     });
     Cart.hasMany(models.CartMember, {
       foreignKey: "cart_id",
+      as: "cartMembers",
       onDelete: "CASCADE",
     });
     Cart.belongsToMany(models.User, {
@@ -61,6 +63,49 @@ class Cart
       return cart;
     } catch (error) {
       throw new CustomError("Failed to create cart", 500);
+    }
+  }
+
+  public static async getMainCart(user_id: number) {
+    try {
+      const cart = await Cart.findOne({
+        where: { user_id, type: "main" },
+        attributes: ["id", "type"],
+        include: [
+          {
+            model: CartItem,
+            as: "cartItems",
+            attributes: ["id", "quantity"],
+            include: [{ model: Product, as: "product" }],
+          },
+        ],
+      });
+      if (!cart) throw new CustomError("Main cart not found", 404);
+      return cart;
+    } catch (error) {
+      throw new CustomError("Failed to get main cart", 500);
+    }
+  }
+
+  public static async getCartWithItems(cart_id: number) {
+    try {
+      const cart = await Cart.findByPk(cart_id, {
+        attributes: ["id", "title", "type"],
+        include: [
+          {
+            model: CartItem,
+            as: "cartItems",
+            attributes: ["id", "quantity"],
+            include: [{ model: Product, as: "product" }],
+          },
+        ],
+      });
+      if (!cart) throw new CustomError("Cart not found", 404);
+      return cart;
+    } catch (error) {
+      console.log("error in getCartWithItems", error);
+
+      throw new CustomError("Failed to get cart with items", 500);
     }
   }
 

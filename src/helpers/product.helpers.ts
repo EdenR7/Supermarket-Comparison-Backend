@@ -62,7 +62,6 @@ export function buildProductQuery(query: ProductCriteria) {
 export function transformProductToFullDetails(
   product: JoinedProductDetails
 ): FullProductDetails {
-  console.log(product);
   return {
     id: product.id,
     name: product.name,

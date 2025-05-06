@@ -50,12 +50,10 @@ export async function getLoggedInUser(
   try {
     const { userId } = req;
     const user = await User.findByPk(userId, {
-      attributes: { exclude: ["password"] },
+      attributes: { exclude: ["password", "createdAt", "updatedAt"] },
     });
     if (!user) throw new CustomError("User not found", 404);
-    const userMainCart = await Cart.findOne({
-      where: { user_id: userId, type: "main" },
-    });
+    const userMainCart = await Cart.getMainCart(user.id);
     if (!userMainCart) throw new CustomError("Main cart not found", 404);
 
     const loggedInUser = {
