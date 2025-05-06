@@ -69,6 +69,7 @@ export async function register(
     let response: any;
 
     await sequelize.transaction(async (transaction) => {
+      // Create user
       const user = await User.create(
         {
           email,
@@ -77,13 +78,19 @@ export async function register(
         },
         { transaction }
       );
-      await Cart.create(
+
+      // Create main cart
+      const cart = await Cart.create(
         {
           user_id: user.id,
           type: "main",
         },
         { transaction }
       );
+
+      // Update user with main_cart_id
+      await user.update({ mainCartId: cart.id }, { transaction });
+
       const token = generateToken(user.id);
       response = buildAuthResponse(user.dataValues, token);
     });

@@ -11,6 +11,7 @@ class User
   public username!: string;
   public password!: string;
   public isAppAdmin!: boolean;
+  public mainCartId!: number | null;
   public createdAt!: Date;
   public updatedAt!: Date;
 
@@ -21,6 +22,7 @@ class User
       through: models.CartMember,
       foreignKey: "user_id",
     });
+    User.belongsTo(models.Cart, { foreignKey: "mainCartId", as: "mainCart" });
   }
 }
 
@@ -49,6 +51,14 @@ User.init(
       type: DataTypes.BOOLEAN,
       allowNull: false,
       defaultValue: false,
+    },
+    mainCartId: {
+      type: DataTypes.INTEGER,
+      allowNull: true,
+      references: {
+        model: "carts",
+        key: "id",
+      },
     },
     createdAt: {
       type: DataTypes.DATE,
