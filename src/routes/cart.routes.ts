@@ -11,6 +11,7 @@ import {
   copySavedCartToMain,
   addCartItem,
   getUserMainCart,
+  deleteCartItem,
 } from "../controllers/cart.controller";
 
 const router = Router();
@@ -44,6 +45,9 @@ router.put("/copy-to-main/:savedCartId", copySavedCartToMain);
 
 // Remove a member from a cart
 router.delete("/cart-members/:id", removeCartMember);
+
+// Delete a cart item
+router.delete("/cart-items/:id", deleteCartItem);
 
 // Delete a cart
 router.delete("/:id", deleteCart);

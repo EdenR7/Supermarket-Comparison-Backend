@@ -310,6 +310,31 @@ export const addCartItem = async (
   }
 };
 
+//  Need to add admin check
+export const deleteCartItem = async (
+  req: AuthRequest,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const { id } = req.params;
+    const { userId } = req;
+    if (!userId) throw new CustomError("User not authenticated", 401);
+    const { cartItemId } = req.body;
+    if (!cartItemId) throw new CustomError("Item ID is required", 400);
+
+    const cartItem = await CartItem.findOne({
+      where: { id: cartItemId, cart_id: id },
+    });
+    if (!cartItem) throw new CustomError("Cart item not found", 404);
+    await cartItem.destroy();
+    res.status(200).json({ message: "Cart item deleted successfully" });
+  } catch (error) {
+    console.log("Error in deleteCartItem", error);
+    next(error);
+  }
+};
+
 // Need to finish this
 export const copySavedCartToMain = async (
   req: AuthRequest,
