@@ -6,6 +6,7 @@ import db from "../db/models";
 import sequelize from "../config/database";
 import { CartAttributes } from "../types/cart.types";
 import { cartAdminAction } from "../utils/cart.utils";
+import { CartItemCreationAttributes } from "src/types/cartItem.types";
 const { Cart, CartMember, User, CartItem, Product } = db;
 
 /**
@@ -310,7 +311,64 @@ export const addCartItem = async (
   }
 };
 
-//  Need to add admin check
+export const updateCartItemQuantity = async (
+  req: AuthRequest,
+  res: Response,
+  next: NextFunction
+) => {
+  console.log("updateCartItemQuantity controller");
+  try {
+    const { cartItemId } = req.params; // cart id
+    const { userId } = req;
+    if (!userId) throw new CustomError("User not authenticated", 401);
+
+    const { newQty } = req.body;
+    if (!newQty) throw new CustomError("New quantity is required", 400);
+    if (newQty < 1)
+      throw new CustomError("Quantity must be greater than 0", 400);
+
+    const cartItem = await CartItem.findOne({
+      where: { id: cartItemId },
+    });
+    if (!cartItem) throw new CustomError("Cart item not found", 404);
+
+    cartItem.quantity = newQty;
+
+    await cartItem.save();
+
+    res
+      .status(200)
+      .json({ message: "Cart item quantity updated successfully" });
+  } catch (error) {
+    console.log("Error in updateCartItemQuantity cart controller", error);
+    next(error);
+  }
+};
+
+export const clearCart = async (
+  req: AuthRequest,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const { id } = req.params;
+    const { userId } = req;
+    if (!userId) throw new CustomError("User not authenticated", 401);
+
+    const cart = await Cart.findByPk(id);
+    if (!cart) throw new CustomError("Cart not found", 404);
+
+    await CartItem.destroy({
+      where: { cart_id: cart.id },
+    });
+
+    res.status(200).json({ message: "Cart cleared successfully" });
+  } catch (error) {
+    console.log("Error in clearCartItem", error);
+    next(error);
+  }
+};
+
 export const deleteCartItem = async (
   req: AuthRequest,
   res: Response,
@@ -372,6 +430,36 @@ export const copySavedCartToMain = async (
     }
   } catch (error) {
     console.log("Error in copySavedCartToMain", error);
+    next(error);
+  }
+};
+
+export const mergeCartToMain = async (
+  req: AuthRequest,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const { userId } = req;
+    if (!userId) throw new CustomError("User not authenticated", 401);
+
+    const { cartItems } = req.body as {
+      cartItems: Omit<CartItemCreationAttributes, "cart_id">[];
+    };
+    if (!cartItems) throw new CustomError("Cart items are required", 400);
+
+    const mainCart = await Cart.findOne({
+      where: { user_id: userId, type: "main" },
+    });
+    if (!mainCart) throw new CustomError("Main cart not found", 404);
+
+    await sequelize.transaction(async (transaction) => {
+      await Cart.insertCartItems(mainCart.id, cartItems, transaction);
+    });
+
+    res.status(200).json({ message: "Cart items merged to main cart" });
+  } catch (error) {
+    console.log("Error in mergeSavedCartToMain", error);
     next(error);
   }
 };

@@ -12,6 +12,9 @@ import {
   addCartItem,
   getUserMainCart,
   deleteCartItem,
+  updateCartItemQuantity,
+  clearCart,
+  mergeCartToMain,
 } from "../controllers/cart.controller";
 
 const router = Router();
@@ -40,11 +43,20 @@ router.post("/cart-items/:id", addCartItem);
 // Add a member to a cart
 router.post("/cart-members/:id", addCartMember);
 
+// Get the main cart for the authenticated user
+router.put("/merge-to-main", mergeCartToMain);
+
 // Copy a saved cart content to the main cart
 router.put("/copy-to-main/:savedCartId", copySavedCartToMain);
 
+// Update the quantity of a cart item
+router.patch("/cart-items/qty/:cartItemId", updateCartItemQuantity);
+
 // Remove a member from a cart
 router.delete("/cart-members/:id", removeCartMember);
+
+// Clear a cart
+router.delete("/cart-items/clear/:id", clearCart);
 
 // Delete a cart item
 router.delete("/cart-items/:id", deleteCartItem);

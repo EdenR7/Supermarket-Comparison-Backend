@@ -10,6 +10,10 @@ import User from "./user";
 import CartItem from "./cartItem";
 import Product from "./product";
 import CartMember from "./cartMember";
+import {
+  CartItemAttributes,
+  CartItemCreationAttributes,
+} from "src/types/cartItem.types";
 
 class Cart
   extends Model<CartAttributes, CartCreationAttributes>
@@ -180,6 +184,41 @@ class Cart
       return carts;
     } catch (error) {
       console.log("error in getUserCarts", error);
+      throw error;
+    }
+  }
+
+  public static async insertCartItems(
+    cart_id: number,
+    items: Omit<CartItemCreationAttributes, "cart_id">[],
+    transaction?: Transaction
+  ) {
+    try {
+      const cartItemsForCreation: CartItemCreationAttributes[] = [];
+      for (const item of items) {
+        if (!item.product_id || !item.quantity)
+          throw new CustomError("Product ID and quantity are required", 400);
+        cartItemsForCreation.push({
+          cart_id,
+          product_id: item.product_id,
+          quantity: item.quantity,
+        });
+      }
+      const newCartItems = await CartItem.bulkCreate(cartItemsForCreation, {
+        transaction,
+      });
+      await Cart.update(
+        {
+          updatedAt: new Date(),
+        },
+        {
+          where: { id: cart_id },
+          transaction,
+        }
+      );
+      return newCartItems;
+    } catch (error) {
+      console.log("error in insertCartItems method", error);
       throw error;
     }
   }
